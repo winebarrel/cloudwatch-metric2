@@ -19,6 +19,16 @@ endif
 go-get:
 	go get github.com/aws/aws-sdk-go
 
+package: clean cloudwatch-metric2
+	gzip -c cloudwatch-metric2 > cloudwatch-metric2-$(VERSION)-$(GOOS)-$(GOARCH).gz
+
+package\:linux:
+	docker run --name $(CENTOS_CONTAINER_NAME) -v $(shell pwd):/tmp/src $(CENTOS_IMAGE) make -C /tmp/src package:linux:docker
+	docker rm $(CENTOS_CONTAINER_NAME)
+
+package\:linux\:docker: package
+	mv cloudwatch-metric2-*.gz pkg/
+
 rpm:
 	docker run --name $(CENTOS_CONTAINER_NAME) -v $(shell pwd):/tmp/src $(CENTOS_IMAGE) make -C /tmp/src rpm:docker
 	docker rm $(CENTOS_CONTAINER_NAME)
