@@ -1,6 +1,7 @@
 package cwmetric2
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -41,31 +42,63 @@ func getValue(dp *cloudwatch.Datapoint) float64 {
 	}
 }
 
+func describeLoadBalancer(alb *elbv2.ELBV2, name string) (out *elbv2.DescribeLoadBalancersOutput, err error) {
+	params := &elbv2.DescribeLoadBalancersInput{
+		Names: []*string{aws.String(name)},
+	}
+
+	out, err = alb.DescribeLoadBalancers(params)
+
+	return
+}
+
+func describeTargetGroups(alb *elbv2.ELBV2, lbArn *string) (out *elbv2.DescribeTargetGroupsOutput, err error) {
+	params := &elbv2.DescribeTargetGroupsInput{
+		LoadBalancerArn: lbArn,
+	}
+
+	out, err = alb.DescribeTargetGroups(params)
+
+	return
+}
+
 func (cwm2 *CloudWatchMetric2) buildDimensions() (dimensions []*cloudwatch.Dimension, err error) {
 	alb := elbv2.New(session.New(), aws.NewConfig().WithRegion(cwm2.Region))
 	dimensions = []*cloudwatch.Dimension{}
-	var dimension *cloudwatch.Dimension
 
 	for name, value := range cwm2.Dimensions {
-		if cwm2.Namespace == "AWS/ApplicationELB" && name == "LoadBalancerName" {
-			params := &elbv2.DescribeLoadBalancersInput{
-				Names: []*string{aws.String(value)},
-			}
-
-			var out *elbv2.DescribeLoadBalancersOutput
-			out, err = alb.DescribeLoadBalancers(params)
+		if cwm2.Namespace == "AWS/ApplicationELB" && (name == "LoadBalancerName" || name == "LoadBalancerNameWithTG") {
+			var albout *elbv2.DescribeLoadBalancersOutput
+			albout, err = describeLoadBalancer(alb, value)
 
 			if err != nil {
 				return
 			}
 
-			albName := strings.SplitN(*out.LoadBalancers[0].LoadBalancerArn, "/", 2)[1]
-			dimension = &cloudwatch.Dimension{Name: aws.String("LoadBalancer"), Value: aws.String(albName)}
-		} else {
-			dimension = &cloudwatch.Dimension{Name: aws.String(name), Value: aws.String(value)}
-		}
+			albId := strings.SplitN(*albout.LoadBalancers[0].LoadBalancerArn, "/", 2)[1]
+			albDim := &cloudwatch.Dimension{Name: aws.String("LoadBalancer"), Value: aws.String(albId)}
+			dimensions = append(dimensions, albDim)
 
-		dimensions = append(dimensions, dimension)
+			if name == "LoadBalancerNameWithTG" {
+				var tgout *elbv2.DescribeTargetGroupsOutput
+				tgout, err = describeTargetGroups(alb, albout.LoadBalancers[0].LoadBalancerArn)
+
+				if len(tgout.TargetGroups) < 1 {
+					err = fmt.Errorf("cannot find TargetGroup")
+				}
+
+				if err != nil {
+					return
+				}
+
+				tgId := strings.SplitN(*tgout.TargetGroups[0].TargetGroupArn, ":", 6)[5]
+				tgDim := &cloudwatch.Dimension{Name: aws.String("TargetGroup"), Value: aws.String(tgId)}
+				dimensions = append(dimensions, tgDim)
+			}
+		} else {
+			dimension := &cloudwatch.Dimension{Name: aws.String(name), Value: aws.String(value)}
+			dimensions = append(dimensions, dimension)
+		}
 	}
 
 	return
