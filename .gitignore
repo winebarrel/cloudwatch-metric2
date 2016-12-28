@@ -1,0 +1,4 @@
+/cloudwatch-metric2
+*.gz
+/pkg/cloudwatch-metric2*
+.DS_Store
