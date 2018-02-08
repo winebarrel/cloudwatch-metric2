@@ -12,6 +12,8 @@ type CloudWatchMetric2 struct {
 	Metric     string
 	Dimensions map[string]string
 	Statistics string
+	Period     int64
+	Delay      int64
 }
 
 func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
@@ -23,6 +25,8 @@ func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
 	flag.StringVar(&cwm2.Metric, "metric", "", "metric")
 	flag.StringVar(&dimensionsStr, "dimensions", "", "dimensions")
 	flag.StringVar(&cwm2.Statistics, "statistics", "", "statistics")
+	flag.Int64Var(&cwm2.Period, "period", 60, "period")
+	flag.Int64Var(&cwm2.Delay, "delay", 0, "delay")
 	flag.Parse()
 
 	if cwm2.Region == "" {
@@ -47,6 +51,16 @@ func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
 
 	if cwm2.Statistics == "" {
 		err = fmt.Errorf("'-statistics' is required")
+		return
+	}
+
+	if cwm2.Period < 1 {
+		err = fmt.Errorf("invalid period")
+		return
+	}
+
+	if cwm2.Delay < 0 {
+		err = fmt.Errorf("invalid delay")
 		return
 	}
 

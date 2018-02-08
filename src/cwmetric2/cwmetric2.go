@@ -111,7 +111,7 @@ func (cwm2 *CloudWatchMetric2) getMetricStatistics0(svc *cloudwatch.CloudWatch) 
 		return
 	}
 
-	now := time.Now()
+	now := time.Now().Add(-time.Duration(cwm2.Delay) * time.Second)
 	_5MinAgo := now.Add(-5 * time.Minute)
 
 	params := &cloudwatch.GetMetricStatisticsInput{
@@ -120,7 +120,7 @@ func (cwm2 *CloudWatchMetric2) getMetricStatistics0(svc *cloudwatch.CloudWatch) 
 		Dimensions: dimensions,
 		StartTime:  aws.Time(_5MinAgo),
 		EndTime:    aws.Time(now),
-		Period:     aws.Int64(60),
+		Period:     aws.Int64(cwm2.Period),
 		Statistics: []*string{aws.String(cwm2.Statistics)},
 	}
 
