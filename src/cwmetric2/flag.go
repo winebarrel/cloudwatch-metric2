@@ -14,6 +14,7 @@ type CloudWatchMetric2 struct {
 	Statistics string
 	Period     int64
 	Delay      int64
+	FailIfZero bool
 }
 
 func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
@@ -27,6 +28,7 @@ func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
 	flag.StringVar(&cwm2.Statistics, "statistics", "", "statistics")
 	flag.Int64Var(&cwm2.Period, "period", 60, "period")
 	flag.Int64Var(&cwm2.Delay, "delay", 0, "delay")
+	flag.BoolVar(&cwm2.FailIfZero, "fail-if-zero", false, "fail-if-zero")
 	flag.Parse()
 
 	if cwm2.Region == "" {

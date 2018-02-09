@@ -26,20 +26,22 @@ func (dps Datapoints) Swap(i, j int) {
 	dps[i], dps[j] = dps[j], dps[i]
 }
 
-func getValue(dp *cloudwatch.Datapoint) float64 {
+func getValue(dp *cloudwatch.Datapoint) (value float64, err error) {
 	if dp.Average != nil {
-		return *dp.Average
+		value = *dp.Average
 	} else if dp.Maximum != nil {
-		return *dp.Maximum
+		value = *dp.Maximum
 	} else if dp.Minimum != nil {
-		return *dp.Minimum
+		value = *dp.Minimum
 	} else if dp.SampleCount != nil {
-		return *dp.SampleCount
+		value = *dp.SampleCount
 	} else if dp.Sum != nil {
-		return *dp.Sum
+		value = *dp.Sum
 	} else {
-		return 0.0
+		err = fmt.Errorf("failed to get value")
 	}
+
+	return
 }
 
 func describeLoadBalancer(alb *elbv2.ELBV2, name string) (out *elbv2.DescribeLoadBalancersOutput, err error) {
@@ -135,7 +137,11 @@ func (cwm2 *CloudWatchMetric2) getMetricStatistics0(svc *cloudwatch.CloudWatch) 
 
 	if len(datapoints) > 0 {
 		dp := datapoints[0]
-		value = getValue(dp)
+		value, err = getValue(dp)
+	}
+
+	if (cwm2.FailIfZero && value == 0) {
+		err = fmt.Errorf("zero value")
 	}
 
 	return
