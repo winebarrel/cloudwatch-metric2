@@ -1,0 +1,13 @@
+Source: cloudwatch-metric2
+Priority: optional
+Maintainer: Genki Sugawara <sugawara@winebarrel.jp>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://github.com/winebarrel/cloudwatch-metric2
+#Vcs-Git: git://git.debian.org/collab-maint/cloudwatch-metric2.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/cloudwatch-metric2.git;a=summary
+
+Package: cloudwatch-metric2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: a tool to get AWS CloudWatch metrics.

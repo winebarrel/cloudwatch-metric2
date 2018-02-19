@@ -1,49 +1,79 @@
 SHELL          := /bin/bash
-VERSION        := v0.1.4
+PROGRAM        := cloudwatch-metric2
+VERSION        := v0.1.5
 GOOS           := $(shell go env GOOS)
 GOARCH         := $(shell go env GOARCH)
 RUNTIME_GOPATH := $(GOPATH):$(shell pwd)
 SRC            := $(wildcard *.go) $(wildcard src/*/*.go)
 
-CENTOS_IMAGE=docker-go-pkg-build-centos6
-CENTOS_CONTAINER_NAME=docker-go-pkg-build-centos6-$(shell date +%s)
+UBUNTU_IMAGE          := docker-go-pkg-build-ubuntu
+UBUNTU_CONTAINER_NAME := docker-go-pkg-build-ubuntu-$(shell date +%s)
+CENTOS_IMAGE          := docker-go-pkg-build-centos6
+CENTOS_CONTAINER_NAME := docker-go-pkg-build-centos6-$(shell date +%s)
 
-all: cloudwatch-metric2
+.PHONY: all
+all: $(PROGRAM)
 
-cloudwatch-metric2: go-get $(SRC)
-	GOPATH=$(RUNTIME_GOPATH) go build -a -tags netgo -installsuffix netgo -o cloudwatch-metric2
-ifeq ($(GOOS),linux)
-	[[ "`ldd cloudwatch-metric2`" =~ "not a dynamic executable" ]] || exit 1
-endif
-
+.PHONY: go-get
 go-get:
 	go get github.com/aws/aws-sdk-go
 
-package: clean cloudwatch-metric2
-	gzip -c cloudwatch-metric2 > cloudwatch-metric2-$(VERSION)-$(GOOS)-$(GOARCH).gz
+$(PROGRAM): $(SRC)
+ifeq ($(GOOS),linux)
+	GOPATH=$(RUNTIME_GOPATH) CGO_ENABLED=0 go build -ldflags "-X cwmetric2.version=$(VERSION)" -a -tags netgo -installsuffix netgo -o $(PROGRAM)
+	[[ "`ldd $(PROGRAM)`" =~ "not a dynamic executable" ]] || exit 1
+else
+	GOPATH=$(RUNTIME_GOPATH) CGO_ENABLED=0 go build -ldflags "-X cwmetric2.version=$(VERSION)" -o $(PROGRAM)
+endif
 
-package\:linux:
-	docker run --name $(CENTOS_CONTAINER_NAME) -v $(shell pwd):/tmp/src $(CENTOS_IMAGE) make -C /tmp/src package:linux:docker
-	docker rm $(CENTOS_CONTAINER_NAME)
+.PHONY: clean
+clean:
+	rm -f $(PROGRAM)
+
+.PHONY: package
+package: clean $(PROGRAM)
+	gzip -c $(PROGRAM) > pkg/$(PROGRAM)-$(VERSION)-$(GOOS)-$(GOARCH).gz
+	rm -f $(PROGRAM)
+
+.PHONY: package/linux
+package/linux:
+	docker run \
+	  --name $(UBUNTU_CONTAINER_NAME) \
+	  -v $(shell pwd):/tmp/src $(UBUNTU_IMAGE) \
+	  make -C /tmp/src go-get package
+	docker rm $(UBUNTU_CONTAINER_NAME)
+
+.PHONY: deb
+deb:
+	docker run --name $(UBUNTU_CONTAINER_NAME) -v $(shell pwd):/tmp/src $(UBUNTU_IMAGE) make -C /tmp/src deb/docker
+	docker rm $(UBUNTU_CONTAINER_NAME)
+
+.PHONY: deb/docker
+deb/docker: clean go-get
+	dpkg-buildpackage -us -uc
+	mv ../$(PROGRAM)_* pkg/
 
 package\:linux\:docker: package
 	mv cloudwatch-metric2-*.gz pkg/
 
+.PHONY: docker/ubuntu
+docker/ubuntu: etc/Dockerfile.ubuntu
+	docker build -f etc/Dockerfile.ubuntu -t $(UBUNTU_IMAGE) .
+
+.PHONY: rpm
 rpm:
-	docker run --name $(CENTOS_CONTAINER_NAME) -v $(shell pwd):/tmp/src $(CENTOS_IMAGE) make -C /tmp/src rpm:docker
+	docker run --name $(CENTOS_CONTAINER_NAME) -v $(shell pwd):/tmp/src $(CENTOS_IMAGE) make -C /tmp/src rpm/docker
 	docker rm $(CENTOS_CONTAINER_NAME)
 
-rpm\:docker: clean
-	cd ../ && tar zcf cloudwatch-metric2.tar.gz src
-	mv ../cloudwatch-metric2.tar.gz /root/rpmbuild/SOURCES/
-	cp cloudwatch-metric2.spec /root/rpmbuild/SPECS/
-	rpmbuild -ba /root/rpmbuild/SPECS/cloudwatch-metric2.spec
-	mv /root/rpmbuild/RPMS/x86_64/cloudwatch-metric2-*.rpm pkg/
-	mv /root/rpmbuild/SRPMS/cloudwatch-metric2-*.src.rpm pkg/
+.PHONY: rpm/docker
+rpm/docker: clean go-get
+	cd ../ && tar zcf $(PROGRAM).tar.gz src
+	mv ../$(PROGRAM).tar.gz /root/rpmbuild/SOURCES/
+	cp $(PROGRAM).spec /root/rpmbuild/SPECS/
+	rpmbuild -ba /root/rpmbuild/SPECS/$(PROGRAM).spec
+	mv /root/rpmbuild/RPMS/x86_64/$(PROGRAM)-*.rpm pkg/
+	mv /root/rpmbuild/SRPMS/$(PROGRAM)-*.src.rpm pkg/
 
-docker\:build\:centos6:
-	docker build -f docker/Dockerfile.centos6 -t $(CENTOS_IMAGE) .
-
-clean:
-	rm -f cloudwatch-metric2 *.gz
-	rm -f pkg/*
+.PHONY: docker/centos
+docker/centos:
+	docker build -f etc/Dockerfile.centos -t $(CENTOS_IMAGE) .

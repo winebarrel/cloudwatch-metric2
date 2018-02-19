@@ -1,4 +1,8 @@
 /cloudwatch-metric2
-*.gz
+/debian/cloudwatch-metric2.debhelper.log
+/debian/cloudwatch-metric2.substvars
+/debian/cloudwatch-metric2/
+/debian/files
 /pkg/cloudwatch-metric2*
+/tmp/
 .DS_Store

@@ -3,8 +3,11 @@ package cwmetric2
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 )
+
+var version string
 
 type CloudWatchMetric2 struct {
 	Region     string
@@ -20,6 +23,7 @@ type CloudWatchMetric2 struct {
 func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
 	cwm2 = &CloudWatchMetric2{}
 	dimensionsStr := ""
+	var showVersion bool
 
 	flag.StringVar(&cwm2.Region, "region", "", "region")
 	flag.StringVar(&cwm2.Namespace, "namespace", "", "namespace")
@@ -29,7 +33,13 @@ func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
 	flag.Int64Var(&cwm2.Period, "period", 60, "period")
 	flag.Int64Var(&cwm2.Delay, "delay", 0, "delay")
 	flag.BoolVar(&cwm2.FailIfZero, "fail-if-zero", false, "fail-if-zero")
+	flag.BoolVar(&showVersion, "version", false, "version")
 	flag.Parse()
+
+	if showVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	if cwm2.Region == "" {
 		err = fmt.Errorf("'-region' is required")

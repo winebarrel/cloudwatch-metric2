@@ -1,18 +1,18 @@
 %define  debug_package %{nil}
 
-Name:   cloudwatch-metric2
-Version:  0.1.2
+Name:     cloudwatch-metric2
+Version:  0.1.5
 Release:  1%{?dist}
-Summary:  Get CloudWatch metrics.
+Summary:  a tool to get AWS CloudWatch metrics.
 
 Group:    Development/Tools
 License:  MIT
-URL:    https://github.com/winebarrel/cloudwatch-metric2
+URL:      https://github.com/winebarrel/cloudwatch-metric2
 Source0:  %{name}.tar.gz
 # https://github.com/winebarrel/cloudwatch-metric2/releases/download/v%{version}/cloudwatch-metric2_%{version}.tar.gz
 
 %description
-Get CloudWatch metrics.
+a tool to get AWS CloudWatch metrics.
 
 %prep
 %setup -q -n src
