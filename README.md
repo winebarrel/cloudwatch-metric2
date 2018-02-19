@@ -24,4 +24,6 @@ Usage of cloudwatch-metric2:
       region
   -statistics string
       statistics
+  -version
+      version
 ```
