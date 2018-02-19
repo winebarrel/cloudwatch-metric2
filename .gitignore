@@ -1,4 +1,5 @@
 /cloudwatch-metric2
+/debian/debhelper-build-stamp
 /debian/cloudwatch-metric2.debhelper.log
 /debian/cloudwatch-metric2.substvars
 /debian/cloudwatch-metric2/

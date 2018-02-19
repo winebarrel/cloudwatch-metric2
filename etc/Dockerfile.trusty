@@ -4,7 +4,7 @@ USER root
 WORKDIR /
 
 RUN apt-get update
-RUN apt-get install -y debhelper wget git
+RUN apt-get install -y debhelper wget git lsb-release
 
 ARG GO_VERSION=1.9.4
 ENV GOROOT=/usr/local/go
