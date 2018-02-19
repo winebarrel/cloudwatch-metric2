@@ -12,4 +12,4 @@ override_dh_auto_install:
 
 override_dh_fixperms:
 	dh_fixperms
-	chmod 0755 debian/fstaid/usr/bin/cloudwatch-metric2
+	chmod 0755 debian/cloudwatch-metric2/usr/bin/cloudwatch-metric2
