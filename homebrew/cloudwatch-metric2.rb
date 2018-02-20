@@ -1,7 +1,7 @@
 require 'formula'
 
 class CloudwatchMetric2 < Formula
-  VERSION = '0.1.6'
+  VERSION = '0.1.7'
 
   homepage 'https://github.com/winebarrel/cloudwatch-metric2'
   url "https://github.com/winebarrel/cloudwatch-metric2/releases/download/v#{VERSION}/cloudwatch-metric2-v#{VERSION}-darwin-amd64.gz"
