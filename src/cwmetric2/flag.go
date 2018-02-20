@@ -108,7 +108,5 @@ func ParseFlag() (cwm2 *CloudWatchMetric2, err error) {
 		cwm2.Dimensions[nameValue[0]] = nameValue[1]
 	}
 
-	fmt.Println(cwm2)
-
 	return
 }
