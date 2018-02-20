@@ -1,7 +1,7 @@
 %define  debug_package %{nil}
 
 Name:     cloudwatch-metric2
-Version:  0.1.5
+Version:  0.1.6
 Release:  1%{?dist}
 Summary:  a tool to get AWS CloudWatch metrics.
 
