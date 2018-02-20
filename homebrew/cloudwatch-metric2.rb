@@ -5,7 +5,7 @@ class CloudwatchMetric2 < Formula
 
   homepage 'https://github.com/winebarrel/cloudwatch-metric2'
   url "https://github.com/winebarrel/cloudwatch-metric2/releases/download/v#{VERSION}/cloudwatch-metric2-v#{VERSION}-darwin-amd64.gz"
-  sha256 '1e19ca4d51b48dcc208eddb574e489eb77a6438c7101d107b7c4d82e16ce7996'
+  sha256 '709bed8302310afd2f8d3d60342216265188b2fa42ffece7dbe3eb958a81458a'
   version VERSION
   head 'https://github.com/winebarrel/cloudwatch-metric2.git', :branch => 'master'
 
